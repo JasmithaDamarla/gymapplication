@@ -59,7 +59,7 @@
         </dependencies>
     </dependencyManagement>
     <build>
-<!--         <finalName>gymapp</finalName> -->
+        <finalName>gymapp</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
