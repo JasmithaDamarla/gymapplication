@@ -1,0 +1,92 @@
+version: '3.8'
+services:
+  eureka-server:
+    container_name: eureka-server
+    image: eureka-server
+    ports:
+      - 8761:8761
+    environment:
+      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
+  gateway-app:
+    image: gateway-service
+    ports:
+      - 4004:4004
+    depends_on:
+      - eureka-server
+  auth-app:
+    image: auth-service
+    ports:
+      - 4005:4005
+    depends_on:
+      - eureka-server
+  gym-app:
+    image: main-service
+    ports:
+      - 4001:4001
+    depends_on:
+      - eureka-server
+      - gymdb
+      - broker
+  email-app:
+    image: email-service
+    ports:
+      - 4003:4003
+    depends_on:
+      - eureka-server
+      - broker
+      - mongodb
+  reports-app:
+    image: reports-service
+    ports:
+      - 4002:4002
+    depends_on:
+      - eureka-server
+      - broker
+      - mongodb
+
+  gymdb:
+    container_name: gym-db
+    image: mysql:latest
+    ports:
+      - 3308:3306
+    environment:
+#      MYSQL_HOST: mysqldb
+#      MYSQL_USER: root
+#      MYSQL_PASSWORD: epam
+      MYSQL_DATABASE: gymdb
+      MYSQL_ROOT_PASSWORD: epam
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - 27007:27017
+
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:7.0.1
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    extra_hosts:
+      - "localhost: 127.0.0.1"
+
+  broker:
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: broker
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    extra_hosts:
+      - "localhost: 127.0.0.1"
+
